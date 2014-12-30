@@ -560,7 +560,11 @@ var torrentStream = function(link, opts, cb) {
 			'announce-list': []
 		});
 
-		ontorrent(parseTorrent(buf));
+		try {
+			ontorrent(parseTorrent(buf));
+		} catch(err) {
+			return engine.emit('error', err);
+		}
 
 		mkdirp(path.dirname(torrentPath), function(err) {
 			if (err) return engine.emit('error', err);
@@ -590,7 +594,13 @@ var torrentStream = function(link, opts, cb) {
 			// But infoHash is enough to connect to trackers and get peers.
 			if (!buf) return discovery.setTorrent(link);
 
-			var torrent = parseTorrent(buf);
+			var torrent;
+
+			try {
+				torrent = parseTorrent(buf);
+			} catch(err) {
+				return engine.emit('error', err);
+			}
 
 			// Bad cache file - fetch it again
 			if (torrent.infoHash !== infoHash) return discovery.setTorrent(link);
